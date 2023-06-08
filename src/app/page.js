@@ -36,10 +36,11 @@ export default function Home() {
             min_length: parseInt('2')
         }
 
+        console.log(process.env.SERVER_URL)
         let config = {
             method: 'post',
             maxBodyLength: Infinity,
-            url: `${process.env.SERVER_URL}/apriori`,
+            url: 'https://ml-algo.herokuapp.com/apriori',
             headers: {
                 'Content-Type': 'application/json'
             },
