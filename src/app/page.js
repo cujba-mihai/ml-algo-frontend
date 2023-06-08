@@ -39,7 +39,7 @@ export default function Home() {
         let config = {
             method: 'post',
             maxBodyLength: Infinity,
-            url: `${process.env.SERVER_URL}/decision_tree/apriori`,
+            url: `${process.env.SERVER_URL}/apriori`,
             headers: {
                 'Content-Type': 'application/json'
             },
