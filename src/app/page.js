@@ -1,95 +1,72 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
+import { Button, Input, message } from 'antd';
+import axios from 'axios';
+import {useState} from "react";
+import AprioriResponse from "@/components/AprioriResponse";
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
+  const [inputValue, setInputValue] = useState('');
+  const [result, setResult] = useState(null);
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+
+    const handleSend = () => {
+        if (!inputValue) {
+            return;
+        }
+        let transactionLines = [];
+        let parsedTransactions = [];
+        const countNewLines = inputValue.split('\n').length;
+
+        if(countNewLines > 3) {
+            transactionLines = inputValue.split('\n').map(val => val.trim()).filter(Boolean);
+            parsedTransactions = transactionLines.map(line => line.trim().split(/\s|,\s/));
+        } else {
+            transactionLines = inputValue.split(/(?<=\w)\s|(?<=\w)\n/);
+            parsedTransactions = transactionLines.map(group => group.trim().split(", ").filter(letter => letter.trim() !== ''));
+        }
+
+        const data = {
+            transactions: parsedTransactions,
+            min_support: parseFloat('0.2'),
+            min_confidence: parseFloat('0.65'),
+            min_lift: parseFloat('1'),
+            min_length: parseInt('2')
+        }
+
+        let config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: `${process.env.SERVER_URL}/decision_tree/apriori`,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data : data
+        };
+
+        axios.request(config).then(response => {
+            console.log(response.data);
+            setResult(response.data);
+        }).catch(err => {
+            console.log(err);
+        });
+    };
+
+    return (
         <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+            <Input.TextArea
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder="Insert your input data here..."
+                autoSize={{ minRows: 3, maxRows: 5 }}
             />
-          </a>
+            <Button onClick={handleSend} type="primary" style={{ margin: '10px 0' }}>
+                Send data
+            </Button>
+
+             <AprioriResponse result={result || null} />
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    );
 }
